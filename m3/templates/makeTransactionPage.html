@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+  <title>M3</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/css/bootstrap.min.css" rel="stylesheet">
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/js/bootstrap.bundle.min.js"></script>
+  <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.6.3/jquery.min.js"></script>
+
+  <style>
+    #status {
+      display: none;
+      word-wrap: break-word;
+    }
+  </style>
+</head>
+
+<body>
+
+  <div class="container mt-2">
+    <h2>Make transaction
+      <img src="https://cdn.dribbble.com/users/2574702/screenshots/6702374/metamask.gif" style="width:200px;">
+    </h2>
+    <a href="{{ url_for('index') }}" style="float: right">
+      <img src="https://cdn-icons-png.flaticon.com/512/553/553416.png" style="width: 50px;">
+    </a>
+    <br><br>
+
+    <form id="form">
+      <h5 id="status"></h5>
+      <label for="sender" class="form-label">Sender Account:</label>
+      <input type="text" class="form-control" id="sender" name="sender" required>
+
+      <label for="receiver" class="form-label">Receiver Account:</label>
+      <input type="text" class="form-control" id="receiver" name="receiver" required>
+
+      <label for="key" class="form-label">Key:</label>
+      <input type="text" class="form-control" id="key" name="key" required>
+
+      <label for="amount" class="form-label">Amount:</label>
+      <input type="text" class="form-control" id="amount" name="amount" required>
+
+      <label for="gasFee" class="form-label">Gas Fee:</label>
+      <input type="number" class="form-control" id="gasFee" name="gasFee" required>
+
+      <label for="gasLimit" class="form-label">Gas Limit:</label>
+      <input type="number" class="form-control" id="gasLimit" name="gasLimit" required>
+      <br>
+      <button type="submit" class="btn btn-success">Make Transaction</button>
+
+    </form>
+  </div>
+
+
+  <script>
+    const myForm = document.getElementById('form');
+
+    myForm.addEventListener('submit', (event) => {
+      $("#status").hide();
+      event.preventDefault();
+      const formData = new FormData(myForm);
+      fetch('/makeTransaction', {
+        method: 'POST',
+        body: formData
+      })
+        .then(response => response.json())
+        .then((data) => {
+          console.log(data)
+          let status = data.status
+          if (status == "success") {
+            $("#status").css("color", "green")
+            $("#status").text("Status : Transaction was successfully your transaction id is: " + data.transactionId)
+          }
+          if (status == "failed") {
+            $("#status").css("color", "red")
+            if(data.message){
+              $("#status").text("Status : Transaction was failed : " + data.message)
+            }
+            else{
+              $("#status").text("Status : Transaction was failed please enter correct values")
+            }
+          }
+          $("#status").show();
+          myForm.reset()
+        })
+        .catch((error) => {
+          $("#status").css("color", "red")
+          $("#status").text("Status : Transaction was failed please enter correct values")
+          $("#status").show();
+          console.error(error)
+        });
+    });
+
+
+  </script>
+</body>
+
+</html>

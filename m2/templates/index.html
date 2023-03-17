@@ -1,0 +1,402 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <title>Genesis block</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.6.3/jquery.min.js"></script>
+
+    <style>
+        body {
+            overflow: auto !important;
+        }
+        #newBlockContainer {
+            display: none;
+        }
+
+        .cube {
+            width: 100px;
+            height: 100px;
+            transform-style: preserve-3d;
+            transform: rotateX(-20deg) rotateY(-45deg);
+            top: 50%;
+            left: 50%;
+            margin-left: 50px;
+            display: inline-block;
+        }
+
+        .cube div {
+            width: 100px;
+            height: 100px;
+            position: absolute;
+            background: #ffbc01;
+            box-shadow: inset 0px 0px 15px rgb(255 255 255 / 60%);
+        }
+
+        .cube div.top,
+        .cube div.left,
+        .cube div.right,
+        .cube div.bottom,
+        .cube div.front,
+        .cube div.back {
+            color: white;
+            font-size: 60px;
+            text-align: center;
+        }
+
+        .cube div.top {
+            transform: rotateX(90deg);
+            margin-top: -50px;
+        }
+
+        .cube div.right {
+            transform: rotateY(90deg);
+            margin-left: 50px;
+        }
+
+        .cube div.bottom {
+            transform: rotateX(90deg);
+            margin-top: 50px;
+        }
+
+        .cube div.left {
+            transform: rotateY(-90deg);
+            margin-left: -50px;
+        }
+
+        .cube div.front {
+            transform: translateZ(50px);
+        }
+
+        .cube div.back {
+            transform: translateZ(-50px);
+        }
+
+        .offcanvas-start {
+            right: 0 !important;
+            transform: translateX(0%) !important;
+            border-left: 1px solid rgba(0, 0, 0, .2) !important;
+            left: auto !important;
+        }
+
+        #blockChainValidateContainer{
+            text-align: center;
+            margin: 20px;
+        }
+    </style>
+
+</head>
+
+<body>
+
+    <div class="offcanvas offcanvas-start w-25" tabindex="-1" id="offcanvas" data-bs-keyboard="false"
+        data-bs-backdrop="false">
+        <div class="offcanvas-header">
+            <h3 class="offcanvas-title d-none d-sm-block" id="offcanvas">Block details</h3>
+            <button type="button" class="btn-close text-reset" data-bs-dismiss="offcanvas" aria-label="Close"
+                onclick="closeSideBar()"></button>
+        </div>
+        <div class="offcanvas-body px-0">
+            <div class="container" id="menu" style="word-wrap: break-word;">
+                <center>
+                    <img src="https://icons.veryicon.com/png/o/miscellaneous/color-work-icon/blockchain-2.png"
+                        width="130px">
+                </center>
+                <p><b>Block No: </b><span id="displayBlockNumber"></span></p>
+                <p><b>Current Hash: </b><span id="displayCurrentHash"></span></p>
+                <p><b>Gas Fee: </b><span id="displayGasFee"></span></p>
+                <p><b>Previous Hash: </b><span id="displayPreviousHash"></span></p>
+                <p><b>Timestamp : </b><span id="displayTimestamp"></span></p>
+                <p><b>Transactions :</b><span id="transactionHeading"></span></p>
+                <ul id="listOfTransactions">
+                    <li><b>Transaction Hash : </b><span id="displayTransactionHash"></span></li>
+                    <li><b>Sender Hash : </b><span id="displaySenderName"></span></li>
+                    <li><b>Receiver Hash : </b><span id="displayReceiverName"></span></li>
+                    <li><b>Amount : </b><span id="displayAmount"></span></li>
+                <ul>
+            </div>
+        </div>
+    </div>
+
+    <div class="container" style="margin-top: 30px;">
+        <form id="form">
+            <input type="hidden" value="1" name="numberOfBlocks" id="numberOfBlocks">
+
+            <div class="col-sm-12">
+                <h2>Block 1</h2>
+                <input type="hidden" value="1" name="B1numberOfTransaction" id="B1numberOfTransaction">
+                <div class="col-sm-3 d-inline-block">
+                    <h4>Transaction 1</h4>
+                    <label class="form-label">Sender Name</label>
+                    <input type="text" class="form-control" id="B1T1senderName" name="B1T1senderName" required>
+                    <label class="form-label">Receiver Name</label>
+                    <input type="text" class="form-control" id="B1T1receiverName" name="B1T1receiverName" required>
+                    <label class="form-label">Amount</label>
+                    <input type="number" class="form-control" id="B1T1amount" name="B1T1amount" required>
+                </div>
+                <button type="button" onclick="addNewTransaction(1)" class="btn btn-info d-block mt-4"
+                    id="B1addNewTransactionBtn">Add
+                    new transaction</button>
+                <hr>
+            </div>
+
+            <br>
+            <button type="button" onclick="addNewBlock()" class="btn btn-warning" id="addNewBlockBtn">Add new
+                block</button>
+            <br>
+            <br>
+            <button type="submit" class="btn btn-danger col-12" id="submitButton">Create Blockchain</button>
+        </form>
+        
+        <h3 id="blockChainValidateContainer"></h3>
+
+        <br><br><br>
+        <div id="mainCubeContainer" style="margin-bottom: 60px;">
+        </div>
+
+    </div>
+
+    <script>
+        completeBlockData = []
+        function mouseInCube(id, blockNumer, e) {
+            console.log(completeBlockData[blockNumer])
+
+            $("#displayBlockNumber").text(completeBlockData[blockNumer]['Block No'])
+            $("#displayCurrentHash").text(completeBlockData[blockNumer]['currentHash'])
+            $("#displayGasFee").text(completeBlockData[blockNumer]['gasfee'])
+            $("#displayPreviousHash").text(completeBlockData[blockNumer]['previousHash'])
+            $("#displayTimestamp").text(completeBlockData[blockNumer]['timestamp'])
+
+            $("#listOfTransactions").empty()
+            if (Array.isArray(completeBlockData[blockNumer]['transactions'])) {
+                $("#transactionHeading").text("")
+                let numberOfTransactions = completeBlockData[blockNumer]['transactions'].length
+                for (var i = 0; i < numberOfTransactions; i++) {
+                    numberOfTransaction = i + 1
+                    let heading = "<li style='list-style:none;color:#ed8606'><b>Transaction "+numberOfTransaction+" : </b></li>";
+                    let sender = "<li><b>Sender Hash : </b><span>" + completeBlockData[blockNumer]['transactions'][i]['sender'] + "</span></li>"
+                    let receiver = "<li><b>Receiver Hash : </b><span>" + completeBlockData[blockNumer]['transactions'][i]['receiver'] + "</span></li>"
+                    let amount = "<li><b>Amount : </b><span>" + completeBlockData[blockNumer]['transactions'][i]['amount'] + "</span></li>"
+                    let hr = "<hr>"
+                    $("#listOfTransactions").append(heading, sender, receiver, amount,hr)
+                }
+            }else{
+                $("#transactionHeading").text("No transactions")
+            }
+
+            $("#displayTransactionHash").text(completeBlockData[blockNumer]['transactions']['transaction Hash'])
+            $("#displaySenderName").text(completeBlockData[blockNumer]['transactions']['senderName'])
+            $("#displayReceiverName").text(completeBlockData[blockNumer]['transactions']['receiverName'])
+            $("#displayAmount").text(completeBlockData[blockNumer]['transactions']['amount'])
+
+            $("#offcanvas").css("visibility", "visible")
+
+            cubeId = "#" + id
+            $("#mainCubeContainer").mousemove(function (e) {
+                $(cubeId).css('transform', 'rotateX(' + - e.pageY + 'deg)' + 'rotateY(' + e.pageX + 'deg)');
+            });
+        }
+
+        function closeSideBar() {
+            $("#offcanvas").css("visibility", "hidden")
+        }
+
+        const myForm = document.getElementById('form');
+        myForm.addEventListener('submit', (event) => {
+            event.preventDefault();
+            const formData = new FormData(myForm);
+            fetch('/', {
+                method: 'POST',
+                body: formData
+            })
+                .then(response => response.json())
+                .then((data) => {
+                    $("#mainCubeContainer").empty();
+                    completeBlockData = data
+                    console.log(data)
+                    for (var i = 0; i < data.length-1; i++) {
+                        createcube(data[i])
+                    }
+                    blockValidateIndex = data.length -1
+                    if(data[blockValidateIndex] == "Validated"){
+                        $("#blockChainValidateContainer").css("color","green")
+                        $("#blockChainValidateContainer").text("Blockchain validated")
+                    }else{
+                        $("#blockChainValidateContainer").css("color","red")
+                        $("#blockChainValidateContainer").text("Blockchain not validated")
+                    }
+
+                })
+                .catch(error => console.error(error));
+        });
+
+
+        var blockcount = 1;
+        function addNewBlock() {
+            blockcount++;
+            document.getElementById("numberOfBlocks").value = blockcount;
+
+            var newBlockContainer = document.createElement("div");
+            newBlockContainer.setAttribute("class", "col-sm-12");
+
+            let blockHeading = document.createElement("h2");
+            blockHeading.innerHTML = "Block " + blockcount;
+
+            let numberOfTransactionsInput = document.createElement("input");
+            numberOfTransactionsInput.setAttribute("type", "hidden");
+            numberOfTransactionsInput.setAttribute("value", "1")
+            numberOfTransactionsInput.setAttribute("id", "B" + blockcount + "numberOfTransaction");
+            numberOfTransactionsInput.setAttribute("name", "B" + blockcount + "numberOfTransaction");
+
+            newBlockContainer.append(blockHeading, numberOfTransactionsInput)
+
+            var newTransactionContainer = document.createElement("div");
+            newTransactionContainer.setAttribute("class", "col-sm-3 d-inline-block");
+
+            let transactionHeading = document.createElement("h4");
+            transactionHeading.innerHTML = "Transaction 1";
+
+            let senderLabel = document.createElement("label");
+            senderLabel.innerHTML = "Sender Name ";
+            senderLabel.setAttribute("class", "form-label");
+
+            let senderInputBox = document.createElement("input");
+            senderInputBox.setAttribute("type", "text");
+            senderInputBox.setAttribute("required", "true");
+            senderInputBox.setAttribute("class", "form-control");
+            senderInputBox.setAttribute("id", "B" + blockcount + "T1senderName");
+            senderInputBox.setAttribute("name", "B" + blockcount + "T1senderName");
+
+            let receiverLabel = document.createElement("label");
+            receiverLabel.innerHTML = "Receiver Name ";
+            receiverLabel.setAttribute("class", "form-label");
+
+            let receiverInputBox = document.createElement("input");
+            receiverInputBox.setAttribute("type", "text");
+            receiverInputBox.setAttribute("required", "true");
+            receiverInputBox.setAttribute("class", "form-control");
+            receiverInputBox.setAttribute("id", "B" + blockcount + "T1receiverName");
+            receiverInputBox.setAttribute("name", "B" + blockcount + "T1receiverName");
+
+            let amountLabel = document.createElement("label");
+            amountLabel.innerHTML = "Amount ";
+            amountLabel.setAttribute("class", "form-label");
+
+            let amountInputBox = document.createElement("input");
+            amountInputBox.setAttribute("type", "number");
+            amountInputBox.setAttribute("required", "true");
+            amountInputBox.setAttribute("class", "form-control");
+            amountInputBox.setAttribute("id", "B" + blockcount + "T1amount");
+            amountInputBox.setAttribute("name", "B" + blockcount + "T1amount");
+
+            let newTransactionButton = document.createElement("button")
+            newTransactionButton.innerHTML = "Add new transaction"
+            newTransactionButton.setAttribute("type", "button")
+            newTransactionButton.setAttribute("class", "btn btn-info d-block mt-4")
+            newTransactionButton.setAttribute("id", "B" + blockcount + "addNewTransactionBtn")
+            newTransactionButton.setAttribute("onclick", "addNewTransaction(" + blockcount + ")")
+
+            let hr = document.createElement("hr")
+            newTransactionContainer.append(transactionHeading, senderLabel, senderInputBox, receiverLabel, receiverInputBox, amountLabel, amountInputBox)
+
+            newBlockContainer.append(newTransactionContainer, newTransactionButton, hr)
+
+            addNewBlockBtn = document.getElementById("addNewBlockBtn")
+            addNewBlockBtn.before(newBlockContainer)
+        }
+
+        function addNewTransaction(blockNumber) {
+            document.getElementById("B" + blockNumber + "numberOfTransaction").value = parseInt(document.getElementById("B" + blockNumber + "numberOfTransaction").value) + 1
+            numberOfTransactions = document.getElementById("B" + blockNumber + "numberOfTransaction").value
+
+            transactionDiv = document.createElement("div")
+            transactionDiv.setAttribute("class", "col-sm-3 d-inline-block")
+
+            transactionHeading = document.createElement("h4")
+            transactionHeading.innerHTML = "Transaction " + numberOfTransactions
+
+            let senderLabel = document.createElement("label");
+            senderLabel.innerHTML = "Sender Name ";
+            senderLabel.setAttribute("class", "form-label");
+
+            let senderInputBox = document.createElement("input");
+            senderInputBox.setAttribute("type", "text");
+            senderInputBox.setAttribute("required", "true");
+            senderInputBox.setAttribute("class", "form-control");
+            senderInputBox.setAttribute("id", "B" + blockNumber + "T" + numberOfTransactions + "senderName");
+            senderInputBox.setAttribute("name", "B" + blockNumber + "T" + numberOfTransactions + "senderName");
+
+            let receiverLabel = document.createElement("label");
+            receiverLabel.innerHTML = "Receiver Name ";
+            receiverLabel.setAttribute("class", "form-label");
+
+            let receiverInputBox = document.createElement("input");
+            receiverInputBox.setAttribute("type", "text");
+            receiverInputBox.setAttribute("required", "true");
+            receiverInputBox.setAttribute("class", "form-control");
+            receiverInputBox.setAttribute("id", "B" + blockNumber + "T" + numberOfTransactions + "receiverName");
+            receiverInputBox.setAttribute("name", "B" + blockNumber + "T" + numberOfTransactions + "receiverName");
+
+            let amountLabel = document.createElement("label");
+            amountLabel.innerHTML = "Amount ";
+            amountLabel.setAttribute("class", "form-label");
+
+            let amountInputBox = document.createElement("input");
+            amountInputBox.setAttribute("type", "number");
+            amountInputBox.setAttribute("required", "true");
+            amountInputBox.setAttribute("class", "form-control");
+            amountInputBox.setAttribute("id", "B" + blockNumber + "T" + numberOfTransactions + "amount");
+            amountInputBox.setAttribute("name", "B" + blockNumber + "T" + numberOfTransactions + "amount");
+
+            transactionDiv.append(transactionHeading, senderLabel, senderInputBox, receiverLabel, receiverInputBox, amountLabel, amountInputBox)
+
+            addNewTransactionBtn = document.getElementById("B" + blockNumber + "addNewTransactionBtn")
+            addNewTransactionBtn.before(transactionDiv)
+
+        }
+
+
+        var numberOfBlocks = 0;
+        function createcube(blockData) {
+            console.log(blockData)
+            var cubeContainer = document.createElement('div')
+            cubeContainer.setAttribute("class", "cube")
+            cubeContainer.setAttribute("id", "cube" + numberOfBlocks)
+            cubeContainer.setAttribute("onmousemove", "mouseInCube(this.id," + blockData['Block No'] + ")")
+            // cubeContainer.setAttribute("onmouseout", "mouseOutCube(this.id)")
+
+
+            var top = document.createElement("div")
+            top.setAttribute("class", "top")
+            if (blockData) {
+                top.innerHTML = blockData['Block No']
+            }
+
+            var right = document.createElement("div")
+            right.setAttribute("class", "right")
+
+            var bottom = document.createElement("div")
+            bottom.setAttribute("class", "bottom")
+
+            var left = document.createElement("div")
+            left.setAttribute("class", "left")
+
+            var back = document.createElement("div")
+            back.setAttribute("class", "back")
+
+            var front = document.createElement("div")
+            front.setAttribute("class", "front")
+
+            cubeContainer.append(top, right, bottom, left, back, front)
+
+            var mainCubeContainer = document.getElementById("mainCubeContainer")
+            mainCubeContainer.append(cubeContainer)
+
+            numberOfBlocks++
+        }
+
+    </script>
+</body>
+
+</html>

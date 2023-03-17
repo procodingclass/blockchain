@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <title>M3</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.6.3/jquery.min.js"></script>
+    <style>
+        #status {
+            display: none;
+            font-size: 20px;
+            float: right;
+        }
+    </style>
+
+</head>
+
+<body>
+    <div class="container mt-2">
+        <h2>View Balance
+            <img src="https://cdn.dribbble.com/users/2574702/screenshots/6702374/metamask.gif" style="width:200px;">
+        </h2>
+        <a href="{{ url_for('index') }}" style="float: right">
+            <img src="https://cdn-icons-png.flaticon.com/512/553/553416.png" style="width: 50px;">
+        </a>
+        <br><br>
+
+        <form id="form">
+            <h5 id="status" class="btn btn-warning"></h5>
+            <br><br>
+            <label for="accountAddress" class="form-label">Account Address:</label>
+            <input type="text" class="form-control" id="accountAddress" name="accountAddress" required>
+            <br>
+            <button type="submit" class="btn btn-success">Get Balance</button>
+        </form>
+    </div>
+
+    <script>
+        const myForm = document.getElementById('form');
+
+        myForm.addEventListener('submit', (event) => {
+            $("#status").css("display", "none");
+            event.preventDefault();
+            const formData = new FormData(myForm);
+            fetch('/getBalance', {
+                method: 'POST',
+                body: formData
+            })
+                .then(response => response.json())
+                .then((data) => {
+                    console.log(data)
+                    let status = data.status
+                    if (status == "success") {
+                        $("#status").text("Your balance is : " + data.balance)
+                    }
+                    if (status == "failed") {
+                        $("#status").text("Status : Something went wrong please try again.")
+                    }
+                    $("#status").css("display", "inline-block");
+                    myForm.reset()
+                })
+                .catch((error) => {
+                    console.error(error)
+                });
+        });
+
+    </script>
+</body>
+
+</html>

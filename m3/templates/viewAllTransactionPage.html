@@ -1,0 +1,182 @@
+<!-- https://sepolia.etherscan.io/tx/0xe5d79df33fc2dadda04a1039c17e0136612532bc9ea129f69c7d4a7cc46903dd -->
+<!DOCTYPE html>
+<html>
+
+<head>
+    <title>M3</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.6.3/jquery.min.js"></script>
+    <style>
+        #allTansactions {
+            display: none;
+        }
+
+        table {
+            font-family: arial, sans-serif;
+            border-collapse: collapse;
+            width: 100%;
+        }
+
+        td,
+        th {
+            border: 1px solid #dddddd;
+            text-align: left;
+            padding: 8px;
+        }
+
+        tr:nth-child(even) {
+            background-color: #ff982d;
+        }
+        #error{
+            display: none;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container mt-2">
+        <h2>View All Transactions
+            <img src="https://cdn.dribbble.com/users/2574702/screenshots/6702374/metamask.gif" style="width:200px;">
+        </h2>
+        <a href="{{ url_for('index') }}" style="float: right">
+            <img src="https://cdn-icons-png.flaticon.com/512/553/553416.png" style="width: 50px;">
+        </a>
+        <br><br>
+
+        <form id="form">
+            <br><br>
+            <label for="accountAddress" class="form-label">Account Address:</label>
+            <input type="text" class="form-control" id="accountAddress" name="accountAddress" required>
+            <br>
+            <button type="submit" class="btn btn-success">Get Transactions</button>
+        </form>
+        <h4 id="error"></h4>
+        <br><br>
+    </div>
+    
+    <table id="allTansactions">
+    </table>
+
+    <script>
+        const myForm = document.getElementById('form');
+
+        myForm.addEventListener('submit', (event) => {
+            event.preventDefault();
+            const formData = new FormData(myForm);
+            fetch('/getTransactions', {
+                method: 'POST',
+                body: formData
+            })
+                .then(response => response.json())
+                .then((data) => {
+                    console.log(data)
+                    $("#allTansactions").empty();
+                    createTabelStructure()
+                    $("#allTansactions").show()
+                    $("#error").hide()
+                    let status = data.status
+                    if (status == "success") {
+                        allTransactions = data.allTransactions
+                        for (var i = 0; i < allTransactions.length; i++) {
+                            let transactionTr = document.createElement("tr");
+
+                            let srNo = document.createElement("th");
+                            srNo.innerHTML = i + 1;
+
+                            let blockNumber = document.createElement("th");
+                            blockNumber.innerHTML = allTransactions[i]['blockNumber'];
+
+                            let blockHash = document.createElement("th");
+                            blockHash.innerHTML = allTransactions[i]['blockHash'];
+
+                            let from = document.createElement("th");
+                            from.innerHTML = allTransactions[i]['from'];
+
+                            let to = document.createElement("th");
+                            to.innerHTML = allTransactions[i]['to'];
+
+                            let transactionFee = document.createElement("th");
+                            transactionFee.innerHTML = allTransactions[i]['gasPrice'];
+
+                            let transactionHash = document.createElement("th");
+                            transactionHash.innerHTML = allTransactions[i]['hash'];
+
+                            let timeStamp = document.createElement("th");
+                            timeStamp.innerHTML = allTransactions[i]['timeStamp'];
+
+                            let amount = document.createElement("th");
+                            amount.innerHTML = allTransactions[i]['value'];
+
+                            let transactionStatus = document.createElement("th");
+
+                            if(allTransactions[i]['txreceipt_status'] == 1){
+                                transactionStatus.innerHTML = "Success";
+                                transactionStatus.style.background = "green"
+                            }
+                            else{
+                                transactionStatus.innerHTML = "Failed";
+                                transactionStatus.style.background = "red"
+                            }
+
+                            transactionTr.append(srNo, blockNumber, transactionStatus, blockHash, from, to, transactionFee, transactionHash, timeStamp, amount)
+
+                            $("#allTansactions").append(transactionTr);
+                        }
+                    }
+                    if (status == "failed") {
+
+                    }
+                    myForm.reset()
+                })
+                .catch((error) => {
+                    $("#error").text("Some error occured please try again")
+                    $("#error").show()
+                    console.error(error)
+                });
+        });
+
+
+        function createTabelStructure() {
+            let transactionTr = document.createElement("tr");
+
+            let srNo = document.createElement("th");
+            srNo.innerHTML = 'Sr.No';
+
+            let blockNumber = document.createElement("th");
+            blockNumber.innerHTML = 'Block No';
+
+            let transactionStatus = document.createElement("th");
+            transactionStatus.innerHTML = 'Transaction Status';
+
+            let blockHash = document.createElement("th");
+            blockHash.innerHTML = 'Block Hash'
+
+            let from = document.createElement("th");
+            from.innerHTML = 'From'
+
+            let to = document.createElement("th");
+            to.innerHTML = 'To'
+
+            let transactionFee = document.createElement("th");
+            transactionFee.innerHTML = 'Transaction Fee'
+
+            let transactionHash = document.createElement("th");
+            transactionHash.innerHTML = 'Transaction Hash'
+
+            let timeStamp = document.createElement("th");
+            timeStamp.innerHTML = 'Date time'
+
+            let amount = document.createElement("th");
+            amount.innerHTML = 'Amount'
+
+            transactionTr.append(srNo, blockNumber, transactionStatus, blockHash, from, to, transactionFee, transactionHash, timeStamp, amount)
+
+            $("#allTansactions").append(transactionTr);
+
+        }
+    </script>
+
+</body>
+
+</html>
